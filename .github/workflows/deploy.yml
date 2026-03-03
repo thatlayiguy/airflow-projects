@@ -1,34 +1,29 @@
-name: Deploy Airflow DAGs
+name: Deploy DAGs to MWAA
+
 on:
   push:
-   branches:
-     - main # Trigger on pushes to the main branch
+    branches:
+      - main
+
 jobs:
- deploy:
-  runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-steps:
- - name: Checkout Repository
- uses: actions/checkout@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-- name: Set up Python
- uses: actions/setup-python@v4
- with:
-  python-version: '3.8'
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-- name: Install AWS CLI (or GCP/Azure CLI)
-run: |
-sudo apt-get update
-sudo apt-get install -y awscli
+      - name: Sync DAGs to MWAA S3
+        run: |
+          aws s3 sync dags/ s3://${{ secrets.MWAA_S3_BUCKET }}/dags/ --delete
 
-- name: Sync DAGs to AWS S3
-env:
- AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
- AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
- AWS_REGION: us-east-1
-run: |
-aws s3 sync dags/ s3://my-airflow-bucket/dags/ --delete
-
-- name: Restart Airflow Scheduler (Optional - ECS Example)
-run: |
-aws ecs update-service --cluster my-airflow-cluster --service airflow-scheduler --force-new-deployment
+      - name: Sync requirements.txt
+        run: |
+          aws s3 cp requirements/requirements.txt s3://${{ secrets.MWAA_S3_BUCKET }}/requirements.txt
