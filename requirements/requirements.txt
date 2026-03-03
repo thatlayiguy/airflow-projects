@@ -1,0 +1,11 @@
+# ETL DAG: MariaDB extract -> File write -> SFTP upload
+# No airflow providers required - uses PyMySQL and paramiko directly
+--constraint "https://raw.githubusercontent.com/apache/airflow/constraints-3.0.6/constraints-3.12.txt"
+
+# MariaDB (direct connection)
+apache-airflow-providers-mysql
+apache-airflow-providers-sftp
+PyMySQL>=1.0.0
+
+# SFTP (key-based auth)
+paramiko>=3.0.0
