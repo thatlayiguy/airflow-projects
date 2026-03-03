@@ -1,4 +1,4 @@
-name: Deploy DAGs to MWAA
+name: Deploy DAGs to Amazon MWAA 
 
 on:
   push:
